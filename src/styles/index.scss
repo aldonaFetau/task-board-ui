@@ -1,0 +1,9 @@
+@use './variables';
+
+
+html, body, #root { height: 100%; }
+
+.board {
+  padding: 1rem;
+}
+
