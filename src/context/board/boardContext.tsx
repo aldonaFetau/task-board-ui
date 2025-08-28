@@ -1,10 +1,12 @@
+
 import { createContext, useContext, useReducer } from 'react';
 import { boardReducer, initialBoardState } from './boardReducer';
 import type { List, Task } from '../../types/domain';
 import * as Lists from '../../services/lists';
 import * as Tasks from '../../services/tasks';
-import type { TaskStatus } from '../../types/enums';
-
+//import type { TaskStatus } from '../../types/enums';
+import { useNotification } from '../../context/NotificationContext';
+import {BoardCardNotifications}  from '../../types/labels'
 type BoardContextValue = {
   lists: List[];
   tasksByList: Record<string, Task[]>;
@@ -17,7 +19,7 @@ type BoardContextValue = {
   addTask: (input: { listId: string; title: string; description?: string; dueDate?: string }) => Promise<void>;
   updateTask: (id: string, patch: Partial<Pick<Task, 'title'|'description'|'dueDate'|'status'|'listId'>>) => Promise<void>;
   removeTask: (id: string, listId: string) => Promise<void>;
-  changeTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
+//  changeTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
   searchTasks: (query: string) => Promise<Task[]>;
 };
 
@@ -25,6 +27,7 @@ const BoardContext = createContext<BoardContextValue | null>(null);
 
 export function BoardProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(boardReducer, initialBoardState);
+  const { addToast } = useNotification();
 
   async function fetchLists() {
     try {
@@ -32,7 +35,8 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       const lists = await Lists.getLists();
       dispatch({ type: 'LOAD_LISTS_SUCCESS', payload: lists });
     } catch (e: any) {
-      dispatch({ type: 'ERROR', payload: e?.message ?? 'Errore nel caricamento liste' });
+      dispatch({ type: 'ERROR', payload: e?.message ?? BoardCardNotifications.fetchListsFailed });
+      addToast(BoardCardNotifications.fetchListsFailed, 'danger');
     }
   }
 
@@ -42,34 +46,35 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       const tasks = await Tasks.getTasksByList(listId);
       dispatch({ type: 'LOAD_TASKS_SUCCESS', payload: { listId, tasks } });
     } catch (e: any) {
-      dispatch({ type: 'ERROR', payload: e?.message ?? 'Errore nel caricamento task' });
+      dispatch({ type: 'ERROR', payload: e?.message ?? BoardCardNotifications.fetchTasksFailed });
+      addToast(BoardCardNotifications.fetchTasksFailed, 'danger');
     }
   }
 
+  async function addList(title: string) {
+    const tmpId = `tmp-${Date.now()}`;
+    const optimistic: List = { id: tmpId, title };
+    dispatch({ type: 'ADD_LIST_OPTIMISTIC', payload: optimistic });
 
-async function addList(title: string) {
-  const tmpId = `tmp-${Date.now()}`;
-  const optimistic: List = { id: tmpId, title };
-  dispatch({ type: 'ADD_LIST_OPTIMISTIC', payload: optimistic });
-
-  try {
-    const saved = await Lists.createList(title);
-    // Replace tmp with saved (real id)
-    dispatch({ type: 'REPLACE_LIST', payload: { tmpId, list: saved } });
-  } catch {
-    dispatch({ type: 'REMOVE_LIST_OPTIMISTIC', payload: { listId: tmpId } });
-    throw new Error('Creazione lista fallita');
+    try {
+      const savedList = await Lists.createList(title);
+      dispatch({ type: 'REPLACE_LIST', payload: { tmpId, list: savedList } });
+      addToast(BoardCardNotifications.addListSuccess, 'success');
+    } catch {
+      dispatch({ type: 'REMOVE_LIST_OPTIMISTIC', payload: { listId: tmpId } });
+      addToast(BoardCardNotifications.addListFailed, 'danger');
+    }
   }
-}
 
   async function removeList(listId: string) {
     const snapshot = state.lists;
     dispatch({ type: 'REMOVE_LIST_OPTIMISTIC', payload: { listId } });
     try {
       await Lists.deleteList(listId);
+      addToast(BoardCardNotifications.removeListSuccess, 'success');
     } catch {
       dispatch({ type: 'LOAD_LISTS_SUCCESS', payload: snapshot });
-      throw new Error('Eliminazione lista fallita');
+      addToast(BoardCardNotifications.removeListFailed, 'danger');
     }
   }
 
@@ -87,124 +92,72 @@ async function addList(title: string) {
     dispatch({ type: 'ADD_TASK_OPTIMISTIC', payload: optimistic });
 
     try {
-      const saved = await Tasks.createTask(input); 
-      dispatch({ type: 'REPLACE_TASK', payload: { tmpId, task: saved } }); //replace tmp with real
+      const saved = await Tasks.createTask(input);
+      dispatch({ type: 'REPLACE_TASK', payload: { tmpId, task: saved } });
+      addToast(BoardCardNotifications.taskCreateSuccess, 'success');
     } catch {
       dispatch({ type: 'REMOVE_TASK_OPTIMISTIC', payload: { id: tmpId, listId: input.listId } });
-      throw new Error('Creazione task fallita');
+      addToast(BoardCardNotifications.taskCreateFailed, 'danger');
     }
   }
 
+  async function updateTask(
+    id: string,
+    patch: Partial<Pick<Task, 'title' | 'description' | 'dueDate' | 'status' | 'listId'>>
+  ) {
+    const oldKey = Object.keys(state.tasksByList).find(k =>
+      (state.tasksByList[k] ?? []).some(t => String(t.id) === String(id))
+    );
+    if (!oldKey) return;
 
-// async function updateTask(
-//   id: string,
-//   patch: Partial<Pick<Task, 'title' | 'description' | 'dueDate' | 'status' | 'listId'>>
-// ) {
-//   // Find old list key
-//   const oldKey = Object.keys(state.tasksByList).find(k =>
-//     (state.tasksByList[k] ?? []).some(t => String(t.id) === String(id))
-//   );
-//   if (!oldKey) return;
+    const prev = state.tasksByList[oldKey].find(t => String(t.id) === String(id))!;
+    const optimistic: Task = { ...prev, ...patch };
 
-//   const prev = state.tasksByList[oldKey].find(t => String(t.id) === String(id))!;
-//   const optimistic: Task = { ...prev, ...patch };
-
-//   // Only move task to new list if listId changes
-//   if (patch.listId != null && String(patch.listId) !== oldKey) {
-//     const newKey = String(patch.listId);
-
-//     dispatch({
-//       type: 'MOVE_TASK_OPTIMISTIC',
-//       payload: { task: optimistic, from: oldKey, to: newKey },
-//     });
-//   } else {
-//     // Status change or other field update
-//     dispatch({ type: 'UPDATE_TASK_OPTIMISTIC', payload: optimistic });
-//   }
-
-//   try {
-//     await Tasks.updateTask(id, patch);
-//   } catch {
-//     // rollback
-//     if (patch.listId != null && String(patch.listId) !== oldKey) {
-//       dispatch({
-//         type: 'MOVE_TASK_OPTIMISTIC',
-//         payload: { task: prev, from: String(patch.listId), to: oldKey },
-//       });
-//     } else {
-//       dispatch({ type: 'UPDATE_TASK_OPTIMISTIC', payload: prev });
-//     }
-//     throw new Error('Aggiornamento task fallito');
-//   }
-// }
-
-async function updateTask(
-  id: string,
-  patch: Partial<Pick<Task, 'title' | 'description' | 'dueDate' | 'status' | 'listId'>>
-) {
-  // Find old list key
-  const oldKey = Object.keys(state.tasksByList).find(k =>
-    (state.tasksByList[k] ?? []).some(t => String(t.id) === String(id))
-  );
-  if (!oldKey) return;
-
-  const prev = state.tasksByList[oldKey].find(t => String(t.id) === String(id))!;
-  const optimistic: Task = { ...prev, ...patch };
-
-  // Only move task to new list if listId changes
-  if (patch.listId != null && String(patch.listId) !== oldKey) {
-    const newKey = String(patch.listId);
-
-    dispatch({
-      type: 'MOVE_TASK_OPTIMISTIC',
-      payload: { task: optimistic, from: oldKey, to: newKey },
-    });
-  } else {
-    // Status change or other field update
-    dispatch({ type: 'UPDATE_TASK_OPTIMISTIC', payload: optimistic });
-  }
-
-  try {
-    // Send the full merged object instead of just the patch
-    await Tasks.updateTask(id, optimistic);
-  } catch {
-    // rollback
     if (patch.listId != null && String(patch.listId) !== oldKey) {
-      dispatch({
-        type: 'MOVE_TASK_OPTIMISTIC',
-        payload: { task: prev, from: String(patch.listId), to: oldKey },
-      });
+      const newKey = String(patch.listId);
+      dispatch({ type: 'MOVE_TASK_OPTIMISTIC', payload: { task: optimistic, from: oldKey, to: newKey } });
     } else {
-      dispatch({ type: 'UPDATE_TASK_OPTIMISTIC', payload: prev });
+      dispatch({ type: 'UPDATE_TASK_OPTIMISTIC', payload: optimistic });
     }
-    throw new Error('Aggiornamento task fallito');
-  }
-}
 
+    try {
+      await Tasks.updateTask(id, optimistic);
+      addToast(BoardCardNotifications.taskUpdateSuccess, 'success');
+    } catch {
+      if (patch.listId != null && String(patch.listId) !== oldKey) {
+        dispatch({ type: 'MOVE_TASK_OPTIMISTIC', payload: { task: prev, from: String(patch.listId), to: oldKey } });
+      } else {
+        dispatch({ type: 'UPDATE_TASK_OPTIMISTIC', payload: prev });
+      }
+      addToast(BoardCardNotifications.taskUpdateFailed, 'danger');
+    }
+  }
 
   async function removeTask(id: string, listId: string) {
     const prev = state.tasksByList[listId];
     dispatch({ type: 'REMOVE_TASK_OPTIMISTIC', payload: { id, listId } });
     try {
       await Tasks.deleteTask(id);
+      addToast(BoardCardNotifications.taskDeleteSuccess, 'success');
     } catch {
       dispatch({ type: 'LOAD_TASKS_SUCCESS', payload: { listId, tasks: prev } });
-      throw new Error('Eliminazione task fallita');
+      addToast(BoardCardNotifications.taskDeleteFailed, 'danger');
     }
   }
 
-  async function changeTaskStatus(task: Task, status: Task['status']) {
-    await updateTask(task.id, { status });
-  }
-  // searchTasks (global, across lists by title)
+  // async function changeTaskStatus(task: Task, status: Task['status']) {
+  //   await updateTask(task.id, { status });
+  // }
+
   async function searchTasks(query: string): Promise<Task[]> {
     try {
       return await Tasks.searchTasks(query);
     } catch (e: any) {
-      console.error("Errore nella ricerca task:", e);
-      throw new Error("Ricerca fallita");
+      console.error('Errore nella ricerca task:', e);
+      throw new Error('Ricerca fallita');
     }
   }
+
   const value: BoardContextValue = {
     lists: state.lists,
     tasksByList: state.tasksByList,
@@ -217,7 +170,6 @@ async function updateTask(
     addTask,
     updateTask,
     removeTask,
-    changeTaskStatus,
     searchTasks
   };
 

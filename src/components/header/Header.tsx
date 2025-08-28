@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { labels } from "../../types/labels";
 import {
   Container,
   Button,
@@ -51,7 +52,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
             <InputGroup style={{ maxWidth: "500px", width: "100%" }}>
               <Form.Control
                 type="text"
-                placeholder="Cerca task..."
+                placeholder={labels.searchTask}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -70,7 +71,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
               size="sm"
               onClick={onLogout}
             >
-              Logout
+              {labels.logoutBtnLabel}
             </Button>
           </div>
         </Container>

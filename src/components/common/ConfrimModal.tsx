@@ -1,4 +1,5 @@
 import { Modal, Button } from "react-bootstrap";
+import { labels } from "../../types/labels";
 
 interface ConfirmModalProps {
   show: boolean;
@@ -14,7 +15,7 @@ export default function ConfirmModal({
   show,
   title,
   message,
-  confirmLabel = "Conferma",
+  confirmLabel = labels.confirmBtnLabel,
   confirmVariant = "danger",
   onConfirm,
   onClose,
@@ -30,7 +31,7 @@ export default function ConfirmModal({
       <Modal.Body>{message}</Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
-          Annulla
+          {labels.cancelBtnLabel}
         </Button>
         <Button variant={confirmVariant} onClick={onConfirm}>
           {confirmLabel}

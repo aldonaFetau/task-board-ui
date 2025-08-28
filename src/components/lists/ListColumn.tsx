@@ -8,7 +8,7 @@ import TaskForm from "../tasks/TaskForm";
 import ConfirmModal from "../common/ConfrimModal";
 import "../../styles/index.scss";
 import styles from "./ListColumns.module.scss";
-
+import { labels, statusLabel } from "../../types/labels";
 export default function ListColumn({ list }: { list: List }) {
   const { tasksByList, fetchTasks, addTask, removeList } = useBoard();
   const [showForm, setShowForm] = useState(false);
@@ -31,7 +31,7 @@ export default function ListColumn({ list }: { list: List }) {
         <div className="d-flex gap-2">
           <OverlayTrigger
             placement="top"
-            overlay={<Tooltip id={`tooltip-add-${list.id}`}>Aggiungi Task</Tooltip>}
+            overlay={<Tooltip id={`tooltip-add-${list.id}`}>{labels.addTask}</Tooltip>}
           >
             <Button size="sm" variant="primary" onClick={() => setShowForm(true)}>
               <FaPlus />
@@ -40,7 +40,7 @@ export default function ListColumn({ list }: { list: List }) {
 
           <OverlayTrigger
             placement="top"
-            overlay={<Tooltip id={`tooltip-remove-${list.id}`}>Elimina Lista</Tooltip>}
+            overlay={<Tooltip id={`tooltip-remove-${list.id}`}>{labels.deleteList}</Tooltip>}
           >
             <Button size="sm" variant="outline-danger" onClick={() => setShowConfirm(true)}>
               <FaTrash />
@@ -50,9 +50,9 @@ export default function ListColumn({ list }: { list: List }) {
       </Card.Header>
 
       <Card.Body>
-        <Section title="Da fare" tasks={todo} />
-        <Section title="In corso" tasks={doing} />
-        <Section title="Completato" tasks={done} />
+        <Section title={statusLabel.ToDo} tasks={todo} />
+        <Section title={statusLabel.InProgress} tasks={doing} />
+        <Section title={statusLabel.Completed} tasks={done} />
       </Card.Body>
 
       <TaskForm
@@ -60,7 +60,7 @@ export default function ListColumn({ list }: { list: List }) {
         show={showForm}
         onClose={() => setShowForm(false)}
         onSubmit={async (payload: any) => {
-          await addTask({ ...payload, listId: Number(list.id) });
+          await addTask({ ...payload});
           setShowForm(false);
         }}
       />
@@ -68,17 +68,17 @@ export default function ListColumn({ list }: { list: List }) {
       {/* Confirm delete modal */}
       <ConfirmModal
         show={showConfirm}
-        title="Conferma eliminazione lista"
+        title={labels.deleteModalTitle}
         message={
           <>
             <p>
-              Sei sicuro di voler eliminare la lista: <br />
+             {labels.deleteListModalBodyText1} <br />
               <strong className="text-dark">“{list.title}”</strong>?
             </p>
-            <p className="text-muted mb-0">Tutti i task collegati andranno persi.</p>
+            <p className="text-muted mb-0"> {labels.deleteListModalBodyText2}</p>
           </>
         }
-        confirmLabel="Elimina lista"
+        confirmLabel={labels.deleteList}
         confirmVariant="danger"
         onConfirm={() => {
           removeList(list.id);
@@ -91,7 +91,7 @@ export default function ListColumn({ list }: { list: List }) {
 }
 
 function Section({ title, tasks }: { title: string; tasks: Task[] }) {
-  const statusClass = title === "Da fare" ? "todo" : title === "In corso" ? "doing" : "done";
+  const statusClass = title === statusLabel.ToDo ? "todo" : title === statusLabel.InProgress ? "doing" : "done";
 
   return (
     <div className={`section ${statusClass} mb-4`}>
@@ -100,7 +100,7 @@ function Section({ title, tasks }: { title: string; tasks: Task[] }) {
         {tasks.length > 0 ? (
           tasks.map((t) => <TaskCard key={t.id} task={t} statusClass={statusClass} />)
         ) : (
-          <p className="text-muted fst-italic mb-0">Nessun elemento</p>
+          <p className="text-muted fst-italic mb-0">{labels.noData} </p>
         )}
       </div>
     </div>

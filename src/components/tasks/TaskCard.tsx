@@ -5,6 +5,8 @@ import TaskForm from "./TaskForm";
 import ConfirmModal from "../common/ConfrimModal";
 import styles from "./TaskCard.module.scss";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { labels } from "../../types/labels";
+
 export default function TaskCard({ task, statusClass }: { task: Task; statusClass?: string }) {
   const { removeTask, updateTask } = useBoard();
   const [showDetails, setShowDetails] = useState(false);
@@ -17,11 +19,11 @@ export default function TaskCard({ task, statusClass }: { task: Task; statusClas
 
       {/* Action icons */}
 <div className={styles.actionIcons}>
-  <OverlayTrigger placement="top" overlay={<Tooltip id={`edit-${task.id}`}>Modifica</Tooltip>}>
+  <OverlayTrigger placement="top" overlay={<Tooltip id={`edit-${task.id}`}>{labels.modifyTask}</Tooltip>}>
     <i className="bi bi-pencil" onClick={() => setShowDetails(true)} />
   </OverlayTrigger>
 
-  <OverlayTrigger placement="top" overlay={<Tooltip id={`delete-${task.id}`}>Elimina</Tooltip>}>
+  <OverlayTrigger placement="top" overlay={<Tooltip id={`delete-${task.id}`}>{labels.deleteBtn}</Tooltip>}>
     <i className="bi bi-trash text-danger" onClick={() => setShowConfirm(true)} />
   </OverlayTrigger>
 </div>
@@ -48,13 +50,13 @@ export default function TaskCard({ task, statusClass }: { task: Task; statusClas
         message={
           <>
             <p>
-              Sei sicuro di voler eliminare il task: <br />
+              {labels.deleteTaskModalBodyText1} <br />
               <strong className="text-dark">“{task.title}”</strong>?
             </p>
-            <p className="text-muted mb-0">Questa azione non può essere annullata.</p>
+            <p className="text-muted mb-0">{labels.deleteTaskModalBodyText2}</p>
           </>
         }
-        confirmLabel="Elimina"
+        confirmLabel={labels.deleteBtn}
         confirmVariant="danger"
         onConfirm={() => {
           removeTask(task.id, task.listId);

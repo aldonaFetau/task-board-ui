@@ -105,3 +105,26 @@
   }
 }
 
+.centeredFeedback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 50vh; // centers vertically
+  text-align: center;
+
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+  }
+}
+
+.noListMessage {
+  font-style:italic;
+  color: #cac9c9; // a modern gray
+//  background: #f4f4f4; 
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  //box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}

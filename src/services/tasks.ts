@@ -16,19 +16,15 @@ export const createTask = async (input: {
   return data;
 };
 
-export const updateTask = async (
-  id: string,
-  patch: Partial<Pick<Task, 'title' | 'description' | 'dueDate' | 'status'|'listId'>>
-): Promise<Task> => {
-  const { data } = await api.put<Task>(`/tasks/${id}`, patch);
+export const updateTask = async (id: string, task: Task): Promise<Task> => {
+  const { data } = await api.put<Task>(`/tasks/${id}`, task);
   return data;
 };
-
 export const deleteTask = async (id: string): Promise<void> => {
   await api.delete(`/tasks/${id}`);
 };
 
-// ✅ fixed search with axios
+// fixed search with axios
 export const searchTasks = async (query: string): Promise<Task[]> => {
   const { data } = await api.get<Task[]>('/tasks', { params: { search: query } });
   return data;

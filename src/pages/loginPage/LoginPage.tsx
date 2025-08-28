@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Button, Card, Form, Spinner, Alert } from "react-bootstrap";
+import { Button, Card, Form, Spinner } from "react-bootstrap";
 import { useAuth } from "../../context/auth/authContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.scss";
 
 export default function LoginPage() {
   const { login, loading } = useAuth();
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("demo");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const location = useLocation() as any;

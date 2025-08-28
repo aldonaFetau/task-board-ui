@@ -3,6 +3,9 @@ import { Modal, Button, Form } from "react-bootstrap";
 import type { Task } from "../../types/domain";
 import type { TaskStatus } from "../../types/enums";
 import { useBoard } from "../../context/board/boardContext";
+import '../../types/labels';
+import { requiredMessages } from "../../types/labels";
+import { labels, statusLabel } from "../../types/labels";
 
 type TaskFormProps = {
   show: boolean;
@@ -26,7 +29,8 @@ export default function TaskForm({
   initial,
   listId,
 }: TaskFormProps) {
-
+   
+ 
   const { lists } = useBoard();
   const [form, setForm] = useState({
     title: "",
@@ -35,7 +39,7 @@ export default function TaskForm({
     status: "ToDo" as TaskStatus,
     listId: listId ?? (lists.length > 0 ? lists[0].id :""), 
   });
-  const [errors, setErrors] = useState<{ title?: string; dueDate?: string }>({});
+  const [errors, setErrors] = useState<{ requiredField?: string }>({});
  
   
   
@@ -67,8 +71,7 @@ export default function TaskForm({
 
     e.preventDefault();
        const newErrors: typeof errors = {};
-    if (!form.title.trim()) newErrors.title = "Il titolo è obbligatorio.";
-    if (!form.dueDate.trim()) newErrors.dueDate = "La scadenza è obbligatoria.";
+    if (!form.title.trim()|| !form.dueDate.trim()) newErrors.requiredField = requiredMessages.requiredField;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -78,32 +81,33 @@ export default function TaskForm({
       ...form,
       id: initial?.id,
     });
+     
     onClose();
   };
 
   return (
     <Modal show={show} onHide={onClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>{initial ? "Modifica Task" : "Nuovo Task"}</Modal.Title>
+        <Modal.Title>{initial ? labels.modifyTaskModalTitle : labels.newTaskModalTitle}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Titolo<span style={{ color: "red" }}>*</span></Form.Label>
+            <Form.Label>{labels.titleField}<span style={{ color: "red" }}>*</span></Form.Label>
             <Form.Control
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              isInvalid={!!errors.title}
+              isInvalid={!!errors.requiredField}
               
             />
                <Form.Control.Feedback type="invalid">
-              {errors.title}
+              {errors.requiredField}
             </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Descrizione</Form.Label>
+            <Form.Label>{labels.descriptionField}</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
@@ -114,7 +118,7 @@ export default function TaskForm({
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Categoria (Lista)</Form.Label>
+            <Form.Label>{labels.categoryField}</Form.Label>
             <Form.Select
               value={form.listId}
               onChange={(e) =>
@@ -129,29 +133,29 @@ export default function TaskForm({
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Data di scadenza<span style={{ color: "red" }}>*</span></Form.Label>
+            <Form.Label>{labels.dueDateField}<span style={{ color: "red" }}>*</span></Form.Label>
             <Form.Control
               type="date"
               value={form.dueDate}
               onChange={(e) => setForm({ ...form, dueDate: e.target.value })}                
-              isInvalid={!!errors.dueDate}
+              isInvalid={!!errors.requiredField}
             />
              <Form.Control.Feedback type="invalid">
-              {errors.dueDate}
+              {errors.requiredField}
             </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Stato</Form.Label>
+            <Form.Label>{labels.stateField}</Form.Label>
             <Form.Select
               value={form.status}
               onChange={(e) =>
                 setForm({ ...form, status: e.target.value as TaskStatus })
               }
             >
-              <option value="ToDo">Da fare</option>
-              <option value="InProgress">In corso</option>
-              <option value="Completed">Completato</option>
+              <option value="ToDo">{statusLabel.ToDo}</option>
+              <option value="InProgress">{statusLabel.InProgress}</option>
+              <option value="Completed">{statusLabel.Completed}</option>
             </Form.Select>
           </Form.Group>
 
@@ -159,10 +163,10 @@ export default function TaskForm({
 
           <div className="d-flex justify-content-end">
             <Button variant="secondary" onClick={onClose} className="me-2">
-              Annulla
+              {labels.cancelBtnLabel}
             </Button>
             <Button type="submit" variant="primary">
-              {initial ? "Salva" : "Crea"}
+              {initial ? labels.saveBtn : labels.addBtn}
             </Button>
           </div>
         </Form>

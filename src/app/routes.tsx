@@ -9,8 +9,8 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: '/board', element: <BoardPage /> },       // protected
-      { path: '/lists/:id', element: <BoardPage /> },   // protected
+      { path: '/board', element: <BoardPage /> },       
+      //{ path: '/lists/:id', element: <ListDetails /> }
     ],
   },
 ]);
