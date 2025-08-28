@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useReducer } from 'react';
 import { authReducer, initialAuthState } from './authReducer';
 import { mockLogin, logout as doLogout } from '../../services/auth';
-import { tokenStore } from '../../utils/tokenStore';
+import { tokenStore, userStore } from '../../utils/authStore';
 
 type AuthContextValue = {
   user: typeof initialAuthState.user;
@@ -17,8 +17,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, {
     ...initialAuthState,
-    // restore session from localStorage if needed
     token: tokenStore.get(),
+    user: userStore.get(),   //restore user on refresh
   });
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -27,13 +27,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading: state.loading,
     isAuthenticated: !!state.token,
     async login(email, password) {
-      dispatch({ type: 'AUTH_START' });
+      dispatch({ type: "AUTH_START" });
       const { user, token } = await mockLogin(email, password);
-      dispatch({ type: 'AUTH_SUCCESS', payload: { user, token } });
+      tokenStore.set(token);
+      userStore.set(user);    // persist user
+      dispatch({ type: "AUTH_SUCCESS", payload: { user, token } });
     },
     logout() {
       doLogout();
-      dispatch({ type: 'AUTH_LOGOUT' });
+      tokenStore.set(null);
+      userStore.set(null);    // clear user
+      dispatch({ type: "AUTH_LOGOUT" });
     },
   }), [state.user, state.token, state.loading]);
 

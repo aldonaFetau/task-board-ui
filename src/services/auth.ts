@@ -1,4 +1,4 @@
-import { tokenStore } from '../utils/tokenStore';
+import { tokenStore } from '../utils/authStore';
 import type { AuthUser } from '../types/domain';
 import {api} from './api';
 
@@ -11,7 +11,7 @@ export const mockLogin = async (email: string, _password: string) => {
   return { user, token };
 };
 
-//real login
+//real login when it implements
 export const login = async (email: string, password: string) => {
   try {
     // Call the backend login endpoint

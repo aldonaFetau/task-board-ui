@@ -18,6 +18,7 @@ type Action =
   | { type: 'UPDATE_TASK_OPTIMISTIC'; payload: Task }
   | { type: 'REMOVE_TASK_OPTIMISTIC'; payload: { id: string; listId: string } }
   | { type: 'REPLACE_TASK'; payload: { tmpId: string; task: Task } }
+  | { type: 'MOVE_TASK_OPTIMISTIC'; payload: { task: Task; from: string; to: string } }
   | { type: 'ERROR'; payload: string | null };
 
 
@@ -33,13 +34,17 @@ export function boardReducer(state: BoardState, action: Action): BoardState {
     case 'LOAD_START':
       return { ...state, loading: true, error: null };
     case 'LOAD_LISTS_SUCCESS':
-  return {
-    ...state,
-    loading: false,
-    lists: [...action.payload].sort((a, b) =>
-      a.title.toLowerCase() > b.title.toLowerCase() ? 1 : -1
-    ),
-  };
+return {
+  ...state,
+  loading: false,
+  lists: [...action.payload].sort((a, b) => {
+    const countA = state.tasksByList[a.id]?.length ?? 0;
+    const countB = state.tasksByList[b.id]?.length ?? 0;
+
+    // bigger count first
+    return countB - countA;
+  }),
+};;
 
     case 'LOAD_TASKS_SUCCESS':
       return {
@@ -108,6 +113,18 @@ export function boardReducer(state: BoardState, action: Action): BoardState {
     },
   };
 }
+case "MOVE_TASK_OPTIMISTIC": {
+  const { task, from, to } = action.payload;
+  return {
+    ...state,
+    tasksByList: {
+      ...state.tasksByList,
+      [from]: state.tasksByList[from].filter((t) => t.id !== task.id),
+      [to]: [...(state.tasksByList[to] ?? []), task],
+    },
+  };
+}
+
     case 'ERROR':
       return { ...state, loading: false, error: action.payload };
     default:

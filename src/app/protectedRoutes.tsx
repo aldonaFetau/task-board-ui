@@ -5,7 +5,7 @@ export default function ProtectedRoute() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />; //remember the route the user wanted to access for post-login redirect.
+    return <Navigate to="/" replace state={{ from: location }} />; //to remember the route the user wanted to access for post-login redirect.
   }
   return <Outlet />;
 }

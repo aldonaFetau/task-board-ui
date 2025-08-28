@@ -7,3 +7,22 @@ html, body, #root { height: 100%; }
   padding: 1rem;
 }
 
+.btn-primary:hover {
+  background-color: #3b82f6 !important;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc2929 !important;
+  color: white !important;
+}
+.tooltip .tooltip-inner {
+  background-color: #e2e8f0 !important; /* light gray */
+  color: #1e293b !important;           /* dark slate text */
+  border: 1px solid #cbd5e1;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+.tooltip .tooltip-arrow::before {
+  border-top-color: #e2e8f0 !important;
+}

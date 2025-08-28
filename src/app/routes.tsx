@@ -1,15 +1,16 @@
+
 import { createBrowserRouter } from 'react-router-dom';
 import ProtectedRoute from './protectedRoutes';
 import LoginPage from '../pages/loginPage/LoginPage';
 import BoardPage from '../pages/boardPage/BoardPage';
 
 export const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
+  { path: '/', element: <LoginPage /> }, // default page is Login
   {
     element: <ProtectedRoute />,
     children: [
-      { path: '/', element: <BoardPage /> },
-      { path: '/lists/:id', element: <BoardPage /> }, 
+      { path: '/board', element: <BoardPage /> },       // protected
+      { path: '/lists/:id', element: <BoardPage /> },   // protected
     ],
   },
 ]);

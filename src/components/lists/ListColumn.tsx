@@ -1,77 +1,108 @@
-import { useEffect, useState } from 'react';
-import { Card, Button } from 'react-bootstrap';
-import type { List, Task } from '../../types/domain';
-import { useBoard } from '../../context/board/boardContext';
-import TaskCard from '../tasks/TaskCard';
-import TaskForm from '../tasks/TaskForm';
-
+import { useEffect, useState } from "react";
+import { Card, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { FaPlus, FaTrash } from "react-icons/fa";
+import type { List, Task } from "../../types/domain";
+import { useBoard } from "../../context/board/boardContext";
+import TaskCard from "../tasks/TaskCard";
+import TaskForm from "../tasks/TaskForm";
+import ConfirmModal from "../common/ConfrimModal";
+import "../../styles/index.scss";
+import styles from "./ListColumns.module.scss";
 
 export default function ListColumn({ list }: { list: List }) {
   const { tasksByList, fetchTasks, addTask, removeList } = useBoard();
   const [showForm, setShowForm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-useEffect(() => {
-  const idStr = String(list.id);
-  if (idStr.startsWith('tmp-')) return; // skip optimistic lists
-  fetchTasks(idStr);
-}, [list.id]);
-
-
+  useEffect(() => {
+    const idStr = String(list.id);
+    if (!idStr.startsWith("tmp-")) fetchTasks(idStr);
+  }, [list.id]);
 
   const tasks = tasksByList[list.id] ?? [];
-  const todo = tasks.filter(t => t.status === 'ToDo');
-  const doing = tasks.filter(t => t.status === 'InProgress');
-  const done = tasks.filter(t => t.status === 'Completed');
+  const todo = tasks.filter((t) => t.status === "ToDo");
+  const doing = tasks.filter((t) => t.status === "InProgress");
+  const done = tasks.filter((t) => t.status === "Completed");
 
   return (
-    <Card className="mb-3" style={{ minWidth: 320 }}>
-      <Card.Header className="d-flex justify-content-between align-items-center">
+<Card className={`mb-3 ${styles.listColumn}`} style={{ minWidth: 320 }}>
+      <Card.Header className={styles.header}>
         <strong>{list.title}</strong>
         <div className="d-flex gap-2">
-          <Button size="sm" onClick={() => setShowForm(true)}>+ Task</Button>
-          <Button size="sm" variant="outline-danger" onClick={() => removeList(list.id)}>Elimina</Button>
+          <OverlayTrigger
+            placement="top"
+            overlay={<Tooltip id={`tooltip-add-${list.id}`}>Aggiungi Task</Tooltip>}
+          >
+            <Button size="sm" variant="primary" onClick={() => setShowForm(true)}>
+              <FaPlus />
+            </Button>
+          </OverlayTrigger>
+
+          <OverlayTrigger
+            placement="top"
+            overlay={<Tooltip id={`tooltip-remove-${list.id}`}>Elimina Lista</Tooltip>}
+          >
+            <Button size="sm" variant="outline-danger" onClick={() => setShowConfirm(true)}>
+              <FaTrash />
+            </Button>
+          </OverlayTrigger>
         </div>
       </Card.Header>
-   <Card.Body>
- <Card.Body>
-  <Section title="Da fare" tasks={todo} />
-  <Section title="In corso" tasks={doing} />
-  <Section title="Completato" tasks={done} />
-</Card.Body>
 
-</Card.Body>
+      <Card.Body>
+        <Section title="Da fare" tasks={todo} />
+        <Section title="In corso" tasks={doing} />
+        <Section title="Completato" tasks={done} />
+      </Card.Body>
 
+      <TaskForm
+        listId={list.id}
+        show={showForm}
+        onClose={() => setShowForm(false)}
+        onSubmit={async (payload: any) => {
+          await addTask({ ...payload, listId: Number(list.id) });
+          setShowForm(false);
+        }}
+      />
 
-
-     <TaskForm
-  listId={list.id}
-  show={showForm}
-  onClose={() => setShowForm(false)}
-  onSubmit={async (payload: any) => {
-    await addTask({ 
-      ...payload, 
-      listId: Number(list.id)  
-    });
-    setShowForm(false);
-  }}
-/>
-
+      {/* Confirm delete modal */}
+      <ConfirmModal
+        show={showConfirm}
+        title="Conferma eliminazione lista"
+        message={
+          <>
+            <p>
+              Sei sicuro di voler eliminare la lista: <br />
+              <strong className="text-dark">“{list.title}”</strong>?
+            </p>
+            <p className="text-muted mb-0">Tutti i task collegati andranno persi.</p>
+          </>
+        }
+        confirmLabel="Elimina lista"
+        confirmVariant="danger"
+        onConfirm={() => {
+          removeList(list.id);
+          setShowConfirm(false);
+        }}
+        onClose={() => setShowConfirm(false)}
+      />
     </Card>
   );
 }
 
-
 function Section({ title, tasks }: { title: string; tasks: Task[] }) {
+  const statusClass = title === "Da fare" ? "todo" : title === "In corso" ? "doing" : "done";
+
   return (
-    <>
-      <h6 className="text-muted">{title}</h6>
-      <div className="d-grid gap-2 mb-3">
+    <div className={`section ${statusClass} mb-4`}>
+      <h6 className="text-muted mb-2">{title}</h6>
+      <div className="d-flex flex-column gap-2">
         {tasks.length > 0 ? (
-          tasks.map((t) => <TaskCard key={t.id} task={t} />)
+          tasks.map((t) => <TaskCard key={t.id} task={t} statusClass={statusClass} />)
         ) : (
-          <p className="text-muted">Nessun elemento</p>
+          <p className="text-muted fst-italic mb-0">Nessun elemento</p>
         )}
       </div>
-    </>
+    </div>
   );
 }

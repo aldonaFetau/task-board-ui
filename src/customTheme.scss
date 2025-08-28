@@ -1,0 +1,16 @@
+
+
+// Override Bootstrap variables BEFORE importing bootstrap
+$primary: #3167c3;   // blue-600
+$danger: #e74a4a;    // red-600
+$success: #30b761;   // green-600
+$warning: #f59e0b;   // amber-500
+$light: #f3f4f6;     // gray-100
+$dark: #1f2937;      // gray-800
+
+
+$body-bg: #f9fafb;
+$body-color: #111827;
+
+// Import Bootstrap with new variables
+@import "bootstrap/scss/bootstrap";

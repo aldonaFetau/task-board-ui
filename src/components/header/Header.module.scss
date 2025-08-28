@@ -1,0 +1,56 @@
+
+
+.userSection {
+  color: #fff;
+  font-weight: 500;
+}
+
+.logoutBtn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  backdrop-filter: blur(6px);
+  border-radius: 50px;
+  color: #fff;
+
+  &:hover {
+    background: rgba(255,255,255,0.25);
+  }
+}
+.appHeader {
+background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  color: #fff;
+  padding: 0.75rem 0;
+}
+
+.logoBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2); // subtle transparent white
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  font-size: 1.4rem;
+ color: #f0f0f0; 
+  
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.searchBtn {
+background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  border: none;
+  color: white;
+
+  &:hover {
+   background: linear-gradient(90deg, #0ea5e9, #2563eb);
+
+  }
+}
