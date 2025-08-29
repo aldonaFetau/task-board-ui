@@ -1,5 +1,5 @@
 import type { List, Task } from '../../types/domain';
-
+import { sortListsByUrgency, sortTasks } from '../../utils/boardCardsUtils';
 export interface BoardState {
   lists: List[];
   tasksByList: Record<string, Task[]>;
@@ -28,57 +28,6 @@ export const initialBoardState: BoardState = {
   loading: false,
   error: null,
 };
-// function sortListsByPendingTasks(lists: List[], tasksByList: Record<string, Task[]>) {
-//   return [...lists].sort((a, b) => {
-//     const countA = (tasksByList[a.id] ?? []).filter(
-//       t => t.status === "ToDo" || t.status === "InProgress"
-//     ).length;
-//     const countB = (tasksByList[b.id] ?? []).filter(
-//       t => t.status === "ToDo" || t.status === "InProgress"
-//     ).length;
-//     return countB - countA; // highest count first
-//   });
-// }
-function sortTasks(tasks: Task[]): Task[] {
-  return [...tasks].sort((a, b) => {
-    // 1. Incomplete before completed
-    if (a.status !== "Completed" && b.status === "Completed") return -1;
-    if (a.status === "Completed" && b.status !== "Completed") return 1;
-
-    // 2. Earlier due date first
-    const aTime = a.dueDate ? Date.parse(a.dueDate) : Infinity;
-    const bTime = b.dueDate ? Date.parse(b.dueDate) : Infinity;
-    return aTime - bTime;
-  });
-}
-
-function getEarliestDue(tasks: Task[]): number {
-  // consider only active tasks
-  const active = tasks.filter(
-    t => t.status !== 'Completed' && t.dueDate && t.dueDate.trim() !== ''
-  );
-
-  if (active.length === 0) return Infinity; // push lists with no active tasks to the end
-
-  const times = active
-    .map(t => Date.parse(t.dueDate as string))
-    .filter((n): n is number => Number.isFinite(n));
-
-  return times.length ? Math.min(...times) : Infinity;
-}
-
-export function sortListsByUrgency(
-  lists: List[],
-  tasksByList: Record<string, Task[]>
-): List[] {
-  return [...lists].sort((a, b) => {
-    const aEarliest = getEarliestDue(tasksByList[String(a.id)] ?? []);
-    const bEarliest = getEarliestDue(tasksByList[String(b.id)] ?? []);
-    return aEarliest - bEarliest; // smaller timestamp = more urgent (earlier)
-  });
-}
-
-
 
 export function boardReducer(state: BoardState, action: Action): BoardState {
   switch (action.type) {
@@ -121,47 +70,37 @@ export function boardReducer(state: BoardState, action: Action): BoardState {
           Object.entries(state.tasksByList).filter(([k]) => k !== action.payload.listId)
         ),
       };
-    //   case 'ADD_TASK_OPTIMISTIC': {
-    //         const listId = action.payload.listId;
-    //         const arr = state.tasksByList[listId] ?? [];
-    //         return {
-    //           ...state,
-    //           tasksByList: { ...state.tasksByList, [listId]: [action.payload, ...arr] },
-              
-    //         };
-    //       }
-      case 'ADD_TASK_OPTIMISTIC': {
-        const listId = String(action.payload.listId);
-        const arr = state.tasksByList[listId] ?? [];
-        const nextTBL = { ...state.tasksByList, [listId]: [action.payload, ...arr] };
-        const sorted = sortListsByUrgency(state.lists, nextTBL);
-        return { ...state, tasksByList: nextTBL, lists: sorted };
-    }
+   
+        case 'ADD_TASK_OPTIMISTIC': {
+          const listId = String(action.payload.listId);
 
-    // case 'UPDATE_TASK_OPTIMISTIC': {
-    //   const listId = action.payload.listId;
-    //   const arr = state.tasksByList[listId] ?? [];
-    //   return {
-    //     ...state,
-    //     tasksByList: {
-    //       ...state.tasksByList,
-    //       [listId]: arr.map(t => (t.id === action.payload.id ? action.payload : t)),
-    //     },
-    //   };
-    // }
+          const arr = state.tasksByList[listId] ?? [];
+          // Insert new task and re-sort within this list
+          const updatedTasks = sortTasks([action.payload, ...arr]);
+
+          const nextTBL = { ...state.tasksByList, [listId]: updatedTasks };
+
+        return { ...state, tasksByList: nextTBL};
+      }
+
+
 
     case 'UPDATE_TASK_OPTIMISTIC': {
-      const listId = String(action.payload.listId);
-      const arr = state.tasksByList[listId] ?? [];
-      const nextTBL = {
-        ...state.tasksByList,
-        [listId]: arr.map(t => (t.id === action.payload.id ? action.payload : t)),
-      };
-      const sorted = sortListsByUrgency(state.lists, nextTBL);
-      return { ...state, tasksByList: nextTBL, lists: sorted };
+        const listId = String(action.payload.listId);
+        const arr = state.tasksByList[listId] ?? [];
+
+        // Replace updated task
+        const updatedArr = arr.map(t =>
+          t.id === action.payload.id ? action.payload : t
+        );
+
+        // Sort tasks within this list
+        const sortedTasks = sortTasks(updatedArr);
+
+        const nextTBL = { ...state.tasksByList, [listId]: sortedTasks }
+
+      return { ...state, tasksByList: nextTBL};
     }
-
-
 
 
     case "MOVE_TASK_OPTIMISTIC": {

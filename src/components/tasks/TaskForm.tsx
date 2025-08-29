@@ -39,7 +39,7 @@ export default function TaskForm({
     status: "ToDo" as TaskStatus,
     listId: listId ?? (lists.length > 0 ? lists[0].id :""), 
   });
-  const [errors, setErrors] = useState<{ requiredField?: string }>({});
+  const [errors, setErrors] = useState<{ requiredField?: string, dueDateError?:string }>({});
  
   
   
@@ -67,21 +67,64 @@ export default function TaskForm({
   
   }, [initial, show, listId, lists]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // const handleSubmit = async (e: React.FormEvent) => {
 
+  //   e.preventDefault();
+  //      const newErrors: typeof errors = {};
+  //   if (!form.title.trim()|| !form.dueDate.trim()) newErrors.requiredField = requiredMessages.requiredField;
+      
+  //   // Due date cannot be earlier than today
+  //   if (form.dueDate) {
+  //     const today = new Date();
+  //     today.setHours(0, 0, 0, 0);
+  //     const dueDate = new Date(form.dueDate);
+
+  //     if (dueDate < today) {
+  //       newErrors.dueDateError = labels.dueDateCannotBePast;
+  //     }
+  //   }
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
+  //   }
+  //   await onSubmit({
+  //     ...form,
+  //     id: initial?.id,
+  //   });
+     
+  //   onClose();
+  // };
+// Helper function to validate due date
+  function validateDueDate(dateStr: string): string | undefined {
+    if (!dateStr.trim()) return requiredMessages.requiredField; // empty
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(dateStr);
+    if (dueDate < today) return labels.dueDateCannotBePast;
+    return undefined; // valid
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-       const newErrors: typeof errors = {};
-    if (!form.title.trim()|| !form.dueDate.trim()) newErrors.requiredField = requiredMessages.requiredField;
+
+    const newErrors: typeof errors = {};
+    if (!form.title.trim()) {
+      newErrors.requiredField = requiredMessages.requiredField;
+    }
+
+    const dueDateError = validateDueDate(form.dueDate);
+    if (dueDateError) newErrors.dueDateError = dueDateError;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+
     await onSubmit({
       ...form,
       id: initial?.id,
     });
-     
+
     onClose();
   };
 
@@ -96,9 +139,14 @@ export default function TaskForm({
             <Form.Label>{labels.titleField}<span style={{ color: "red" }}>*</span></Form.Label>
             <Form.Control
               type="text"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              value={form.title}              
               isInvalid={!!errors.requiredField}
+              onChange={(e) => {
+                  setForm({ ...form, title: e.target.value });
+                  if (!!errors.requiredField) {
+                    setErrors({ ...errors, requiredField: undefined });
+                  }
+                }}
               
             />
                <Form.Control.Feedback type="invalid">
@@ -137,11 +185,17 @@ export default function TaskForm({
             <Form.Control
               type="date"
               value={form.dueDate}
-              onChange={(e) => setForm({ ...form, dueDate: e.target.value })}                
-              isInvalid={!!errors.requiredField}
+              onChange={(e) => {
+                    const newDate = e.target.value;
+                    setForm({ ...form, dueDate: newDate });
+
+                    const error = validateDueDate(newDate);
+                    setErrors({ ...errors, dueDateError: error });
+                  }}               
+              isInvalid={!!errors.dueDateError || !!errors.requiredField} 
             />
              <Form.Control.Feedback type="invalid">
-              {errors.requiredField}
+              {errors.dueDateError || errors.requiredField}
             </Form.Control.Feedback>
           </Form.Group>
 

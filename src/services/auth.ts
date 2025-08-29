@@ -1,7 +1,7 @@
 import { tokenStore } from '../utils/authStore';
 import type { AuthUser } from '../types/domain';
 import {api} from './api';
-
+import { labels } from '../types/labels';
 
 export const mockLogin = async (email: string, _password: string) => {
 
@@ -27,7 +27,7 @@ export const login = async (email: string, password: string) => {
 
     return { user, token };
   } catch (err: any) {
-    throw new Error(err.response?.data?.message || 'Login failed');
+    throw new Error(err.response?.data?.message || labels.loginErrorMessage);
   }
 };
 export const logout = () => tokenStore.set(null);

@@ -25,7 +25,8 @@ export const BoardCardNotifications = {
   fetchTasksFailed: "Errore nel caricamento dei task",
   statusChangeSuccess: "Stato task aggiornato con successo",
   statusChangeFailed: "Aggiornamento stato task fallito",
-  searchFailed: "Errore nella ricerca dei task",
+  searchFailed: "Errore nella ricerca dei task"
+
 };
  
 export const labels  = {
@@ -52,10 +53,16 @@ export const labels  = {
     noData:'Nessun elemento',
     saveBtn:'Salva',
     addBtn:'Aggiungi',
-
-
-    
-      
-
- 
+    searchFailed:'Ricerca fallita',
+    boardContextError:'useBoard must be used within BoardProvider',
+    notificationContextError:"useNotification must be used within NotificationProvider",
+    listNameFieldPlaceholeder:"Nome Di Nuova lista",
+    noListMessage:'Nessuna lista trovata. Creane una per iniziare.',
+    emailValidationError:"Inserisci un'email valida.",
+    passwordValidationError:"La password deve avere almeno 7 caratteri.",
+    emailField:'Email',
+    passwordField:'Password',
+    loginField:'Entra',
+    loginErrorMessage:'Login failed',
+    dueDateCannotBePast:"La data di scadenza non può essere antecedente a oggi"
 };

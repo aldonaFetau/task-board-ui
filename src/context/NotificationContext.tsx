@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useRef } from "react";
 import { Toast, ToastContainer as RBToastContainer } from "react-bootstrap";
-
+import { labels } from '../types/labels';
 type ToastItem = { id: number; message: string; variant: "success" | "danger" };
 
 type NotificationContextType = {
@@ -43,7 +43,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             autohide
             delay={3000}
             style={{
-              backgroundColor: t.variant === "success" ? "#4CAF50" : "#dc3545", // warm green or red
+              backgroundColor: t.variant === "success" ? "#4CAF50" : "#e13a4aff", 
               color: "white",
             }}
           >
@@ -58,6 +58,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context)
-    throw new Error("useNotification must be used within NotificationProvider");
+    throw new Error(labels.notificationContextError);
   return context;
 };

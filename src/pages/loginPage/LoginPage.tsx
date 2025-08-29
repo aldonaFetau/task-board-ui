@@ -3,6 +3,7 @@ import { Button, Card, Form, Spinner } from "react-bootstrap";
 import { useAuth } from "../../context/auth/authContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.scss";
+import { labels,requiredMessages } from "../../types/labels";
 
 export default function LoginPage() {
   const { login, loading } = useAuth();
@@ -11,21 +12,28 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const location = useLocation() as any;
+function validate() {
+  const newErrors: { email?: string; password?: string } = {};
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  function validate() {
-    const newErrors: { email?: string; password?: string } = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      newErrors.email = "Inserisci un'email valida.";
-    }
-    if (password.length < 7) {
-      newErrors.password = "La password deve avere almeno 7 caratteri.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  // Check if email is empty
+  if (!email.trim()) {
+    newErrors.email = requiredMessages.requiredField;
+  } else if (!emailRegex.test(email)) {
+    newErrors.email = labels.emailValidationError;
   }
+
+  // Check if password is empty
+  if (!password.trim()) {
+    newErrors.password = requiredMessages.requiredField;
+  } else if (password.length < 7) {
+    newErrors.password = labels.passwordValidationError;
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+}
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,11 +52,14 @@ export default function LoginPage() {
 
           <Form onSubmit={onSubmit} noValidate>
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label>{labels.emailField}<span className="text-danger">*</span></Form.Label>
               <Form.Control
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
                 isInvalid={!!errors.email}
                 required
               />
@@ -60,11 +71,14 @@ export default function LoginPage() {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label>Password</Form.Label>
+              <Form.Label>{labels.passwordField}<span className="text-danger">*</span></Form.Label>
               <Form.Control
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                 onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
                 isInvalid={!!errors.password}
                 required
               />
@@ -80,7 +94,7 @@ export default function LoginPage() {
               className={`${styles.loginBtn} w-100`}
               disabled={loading}
             >
-              {loading ? <Spinner size="sm" animation="border" /> : "Entra"}
+              {loading ? <Spinner size="sm" animation="border" /> : labels.loginField}
             </Button>
           </Form>
         </Card.Body>

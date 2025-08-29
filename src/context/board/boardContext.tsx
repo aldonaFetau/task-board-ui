@@ -4,9 +4,8 @@ import { boardReducer, initialBoardState } from './boardReducer';
 import type { List, Task } from '../../types/domain';
 import * as Lists from '../../services/lists';
 import * as Tasks from '../../services/tasks';
-//import type { TaskStatus } from '../../types/enums';
 import { useNotification } from '../../context/NotificationContext';
-import {BoardCardNotifications}  from '../../types/labels'
+import {BoardCardNotifications, labels}  from '../../types/labels'
 type BoardContextValue = {
   lists: List[];
   tasksByList: Record<string, Task[]>;
@@ -19,7 +18,6 @@ type BoardContextValue = {
   addTask: (input: { listId: string; title: string; description?: string; dueDate?: string }) => Promise<void>;
   updateTask: (id: string, patch: Partial<Pick<Task, 'title'|'description'|'dueDate'|'status'|'listId'>>) => Promise<void>;
   removeTask: (id: string, listId: string) => Promise<void>;
-//  changeTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
   searchTasks: (query: string) => Promise<Task[]>;
 };
 
@@ -145,16 +143,11 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // async function changeTaskStatus(task: Task, status: Task['status']) {
-  //   await updateTask(task.id, { status });
-  // }
-
   async function searchTasks(query: string): Promise<Task[]> {
     try {
       return await Tasks.searchTasks(query);
     } catch (e: any) {
-      console.error('Errore nella ricerca task:', e);
-      throw new Error('Ricerca fallita');
+      throw new Error(labels.searchFailed);
     }
   }
 
@@ -178,6 +171,6 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
 
 export const useBoard = () => {
   const ctx = useContext(BoardContext);
-  if (!ctx) throw new Error('useBoard must be used within BoardProvider');
+  if (!ctx) throw new Error(labels.boardContextError);
   return ctx;
 };

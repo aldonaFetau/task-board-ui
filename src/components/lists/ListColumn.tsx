@@ -9,6 +9,8 @@ import ConfirmModal from "../common/ConfrimModal";
 import "../../styles/index.scss";
 import styles from "./ListColumns.module.scss";
 import { labels, statusLabel } from "../../types/labels";
+
+
 export default function ListColumn({ list }: { list: List }) {
   const { tasksByList, fetchTasks, addTask, removeList } = useBoard();
   const [showForm, setShowForm] = useState(false);
@@ -30,6 +32,7 @@ export default function ListColumn({ list }: { list: List }) {
         <strong>{list.title}</strong>
         <div className="d-flex gap-2">
           <OverlayTrigger
+            trigger={['hover']} 
             placement="top"
             overlay={<Tooltip id={`tooltip-add-${list.id}`}>{labels.addTask}</Tooltip>}
           >

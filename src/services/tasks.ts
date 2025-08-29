@@ -24,7 +24,6 @@ export const deleteTask = async (id: string): Promise<void> => {
   await api.delete(`/tasks/${id}`);
 };
 
-// fixed search with axios
 export const searchTasks = async (query: string): Promise<Task[]> => {
   const { data } = await api.get<Task[]>('/tasks', { params: { search: query } });
   return data;

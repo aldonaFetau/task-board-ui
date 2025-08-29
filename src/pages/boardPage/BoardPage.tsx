@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Button, Container, Spinner, Alert, Form } from 'react-bootstrap';
-import { useBoard } from '../../context/board/boardContext';
+import { useBoard, } from '../../context/board/boardContext';
 import ListColumn from '../../components/lists/ListColumn';
 import Header from '../../components/header/Header';
 import styles from './BoardPage.module.scss';
@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import '../../types/labels'
 import { requiredMessages } from '../../types/labels';
 import { FaRegFolderOpen } from 'react-icons/fa';
-
+import { labels } from '../../types/labels';
 
 export default function BoardPage() {
   const { lists, fetchLists, addList, loading, error } = useBoard();
@@ -50,8 +50,6 @@ async function createList(e: React.FormEvent) {
   }, []);
 
 
-  const nothing = !loading && lists.length === 0;
-
   return (
     <>
  <Header 
@@ -65,7 +63,7 @@ async function createList(e: React.FormEvent) {
   <Form onSubmit={createList} className={styles.addListCard}>
     <div className={styles.inputWrapper}>
       <Form.Control
-        placeholder="Nome Di Nuova lista"
+        placeholder= {labels.listNameFieldPlaceholeder}
         value={newListName}
         ref={inputRef}
         onChange={(e) => {
@@ -80,7 +78,7 @@ async function createList(e: React.FormEvent) {
       )}
     </div>
     <Button variant="primary" type="submit" size="sm">
-      Aggiungi
+      {labels.addBtn}
     </Button>
   </Form>
 </div>
@@ -95,7 +93,7 @@ async function createList(e: React.FormEvent) {
             
         <p className={styles.noListMessage}>
           <FaRegFolderOpen size={20} style={{ marginBottom: '0.5rem', color: '#ded7d7ff' }} />
-              Nessuna lista trovata. Creane una per iniziare.
+              {labels.noListMessage}
         </p>
       )}
     </div>
